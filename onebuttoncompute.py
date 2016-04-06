@@ -24,11 +24,9 @@ def compute():
     inputdir.cleanup()
     outputdir.cleanup()
 
-    result_url = flask.config['BEEHUB_ROOT'] + request.form['outputdir']
+    result_url = app.config['BEEHUB_ROOT'] + request.form['outputdir']
 
     return render_template('result.html', result_url=result_url)
-
-def
 
 if __name__ == '__main__':
     app.run()
