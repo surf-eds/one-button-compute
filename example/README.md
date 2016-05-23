@@ -1,6 +1,6 @@
 Simple docker container that performs a word count.
 
-# Run
+# Run from command line
 
 It takes 2 arguments:
 1. Input text file
@@ -13,9 +13,21 @@ docker run -ti --rm -u $UID -v $PWD:/input -v $PWD:/output wca /input/input /out
 cat output
 ```
 
-## Build
+# Run from web app
+
+1. Upload a text file to a BeeHub (https://www.beehub.nl).
+2. Create a output directory on Beehub.
+3. Submit in webapplication
+
+* input:
+* outputdir:
+* image: wca
+
+# Build
 
 Run:
 ```
 docker build -t wca .
 ```
+
+
