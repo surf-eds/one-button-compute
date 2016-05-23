@@ -4,7 +4,7 @@ Web site to perform a calculation of a single input using a single command line 
 
 # Requirements
 
-* Python3
+* Python2
 
 # Run
 

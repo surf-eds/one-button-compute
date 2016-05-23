@@ -3,25 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>One Button Compute</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 </head>
 <body>
-First upload your files to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>.
-<form action="{{ url_for('compute') }}" method="post">
-  <div class="form-group">
-    <label for="inputfile">Input file</label>
-    <input type="text" class="form-control" id="inputfile" name="inputfile" placeholder="File path on Beehub">
-  </div>
-  <div class="form-group">
-    <label for="outputdir">Output directory</label>
-    <input type="text" class="form-control" id="outputdir" name="outputdir" placeholder="File path on Beehub">
-  </div>
-  <div class="form-group">
-    <label for="dockerimage">Docker image</label>
-    <input type="text" class="form-control" id="dockerimage" name="dockerimage" placeholder="Docker image name">
-    <p class="help-block">Docker image name from <a href="https://hub.docker.com/">https://hub.docker.com/</a></p>
-  </div>
-  <button type="submit" class="btn btn-default">Submit</button>
-</form>
+<div class="container">
+    <div class="row">
+        <h1>One Button compute</h1>
+        First upload your files to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>.
+        <form action="{{ url_for('compute') }}" method="post">
+            <div class="form-group">
+                <label for="inputfile">Input file</label>
+                <input type="text" class="form-control" id="inputfile" name="inputfile"
+                       placeholder="File path on Beehub">
+            </div>
+            <div class="form-group">
+                <label for="outputdir">Output directory</label>
+                <input type="text" class="form-control" id="outputdir" name="outputdir"
+                       placeholder="File path on Beehub">
+            </div>
+            <div class="form-group">
+                <label for="dockerimage">Docker image</label>
+                <input type="text" class="form-control" id="dockerimage" name="dockerimage"
+                       placeholder="Docker image name">
+                <p class="help-block">Docker image name from <a
+                        href="https://hub.docker.com/">https://hub.docker.com/</a>
+                </p>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+        </form>
+    </div>
+</div>
 </body>
 </html>
