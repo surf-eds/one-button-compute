@@ -7,4 +7,4 @@ services:
 install:
 - pip install cwl-runner
 script:
-- cwl-runner example/cwa.tool.cwl --input README.md --output README.wc
+- ./example/cwa.tool.cwl --input README.md --output README.wc

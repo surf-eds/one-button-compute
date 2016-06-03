@@ -38,7 +38,7 @@ pip install cwl-runner
 ```
 
 ```
-cwl-runner --debug example/cwa.tool.cwl --input README.md --output README.wc
+./example/cwa.tool.cwl --input README.md --output README.wc
 ```
 This will execute cwa script inside Docker container using cwl-runner.
 
