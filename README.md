@@ -1,5 +1,7 @@
 # One button compute
 
+[![Build Status](https://travis-ci.org/surf-eds/one-button-compute.svg?branch=master)](https://travis-ci.org/surf-eds/one-button-compute)
+
 Web site to perform a calculation of a single input using a single command line call inside a docker container.
 
 # Requirements
