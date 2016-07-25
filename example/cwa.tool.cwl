@@ -6,8 +6,9 @@ doc: "Count number of chars, words and lines"
 requirements:
 - class: DockerRequirement
   dockerImageId: wca
-  dockerFile:
-    "$include": "Dockerfile"
+  dockerFile: |
+    FROM alpine
+    RUN echo -e '#!/bin/sh\nsleep 10\nwc $1 > $2\n' > /bin/wca && chmod +x /bin/wca
 inputs:
   input:
     type: File
