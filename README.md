@@ -2,7 +2,14 @@
 
 [![Build Status](https://travis-ci.org/surf-eds/one-button-compute.svg?branch=master)](https://travis-ci.org/surf-eds/one-button-compute)
 
-Web site to perform a calculation of a single input using a single command line call inside a docker container.
+Web site runs a workflow.
+ 
+# Feature/Limitations
+
+* Workflow is a single file in [Common Workflow format](http://www.commonwl.org/)
+* Workflow must take single output file (--input option) and generates a single output file (--output option)
+* The workflow, input file are downloaded from a webdav server
+* The output file is uploaded to a webdav server
 
 # Requirements
 
@@ -27,10 +34,10 @@ cd /opt
 git clone https://github.com/surf-eds/one-button-compute.git
 cd one-button-compute/
 pip install -r requirements.txt
-# Create settings.cfs
+# Create settings.cfg
 ```
 
-Automaticly start one-button-compute on boot with upstart file
+Automatically start one-button-compute on boot with upstart file
 
 ```
 cat /etc/init/onebuttoncompute.conf
