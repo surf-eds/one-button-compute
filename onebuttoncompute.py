@@ -6,6 +6,10 @@ import uuid
 from urlparse import urlparse
 from flask import Flask, render_template, request
 import easywebdav
+import subprocess
+from cwltool.load_tool import fetch_document, validate_document, make_tool
+from cwltool.workflow import defaultMakeTool
+from cwltool.main import load_job_order
 from docker import Client as DockerClient
 
 app = Flask(__name__)
@@ -15,6 +19,8 @@ app.config.from_pyfile('settings.cfg')
 class BeeHub(object):
     def __init__(self, root, username, password):
         o = urlparse(root)
+        logging.warning(o)
+        logging.warning(o.path)
         self.path = o.path
         self.client = easywebdav.connect(
             host=o.netloc,
@@ -48,40 +54,105 @@ def index():
 @app.route('/compute', methods=['POST'])
 def compute():
     remote_input_file = request.form['inputfile']
-    image = request.form['dockerimage']
+    remote_workflow_file = request.form['cwl_workflow']
     remote_output_dir = request.form['outputdir']
 
-    exit_code, log, result_url = perform_computation(image, remote_input_file, remote_output_dir)
+    exit_code, log, result_url = perform_computation(remote_workflow_file, remote_input_file, remote_output_dir)
 
     return render_template('result.html', result_url=result_url, exit_code=exit_code, log=log)
 
 
-def perform_computation(image, remote_input_file, remote_output_dir):
-    session_dir = tempfile.mkdtemp('session', prefix='onebuttoncompute')
+def perform_computation(remote_workflow_file, remote_input_file, remote_output_dir):
+    session_dir = tempfile.mkdtemp('-session', prefix='onebuttoncompute-')
     local_input_dir = session_dir + '/in'
     os.mkdir(local_input_dir)
     local_output_dir = session_dir + '/out'
     os.mkdir(local_output_dir)
 
+    logging.warning('Downloading input file and workflow')
     # Download input file from beehub to inputdir
     input_file = 'input'
     beehub = BeeHub.from_config(app.config)
     local_input_file = local_input_dir + '/' + input_file
     beehub.download(remote_input_file, local_input_file)
-    # Run Docker
+    workflow_file = 'workflow.cwl'
+    local_workflow_file = local_input_dir + '/' + workflow_file
+    beehub.download(remote_workflow_file, local_workflow_file)
     output_file = 'output'
 
-    exit_code, log = run_docker(image, input_file, local_input_dir, local_output_dir, output_file)
+    exit_code, log = run_cwl(local_workflow_file, input_file, local_input_dir, local_output_dir, output_file)
 
+    logging.warning('Uploading output file')
     # Upload content of output dir to Beehub
     remote_output_file = remote_output_dir + '/' + output_file
     abs_output_file = local_output_dir + '/' + output_file
     beehub.upload(abs_output_file, remote_output_file)
 
+    # logging.warning('Clear session')
     shutil.rmtree(session_dir)
 
-    result_url = app.config['BEEHUB_ROOT'] + '/' + request.form['outputdir']
+    result_url = app.config['BEEHUB_ROOT'] + '/' + remote_output_dir
+
     return exit_code, log, result_url
+
+
+def run_cwl(workflow_file, input_file, local_input_dir, local_output_dir, output_file):
+
+    logging.warning('Validating cwl')
+    document_loader, workflowobj, uri = fetch_document(workflow_file)
+    document_loader, avsc_names, processobj, metadata, uri = validate_document(document_loader, workflowobj, uri)
+    # tool = make_tool(document_loader, avsc_names, metadata, uri,
+    #                  defaultMakeTool, {})
+    # job_order_object = load_job_order(args, tool, stdin,
+    #                                   print_input_deps=args.print_input_deps,
+    #                                   relative_deps=args.relative_deps,
+    #                                   stdout=stdout)
+
+    logging.warning('Running cwl')
+    # logging.warning('Starting xenon')
+
+    # import xenon
+    # with xenon.Xenon() as xe:
+    #     job_api = xe.jobs()
+    #     scheduler = job_api.newScheduler('local', 'localhost', None, None)
+    #     desc = xenon.jobs.JobDescription()
+    #     desc.setExecutable('cwl-runner')
+    #     desc.setArguments(workflow_file, input_file, output_file)
+    #     cwl_stdout = local_output_dir + 'stdout.txt'
+    #     desc.setStdout(cwl_stdout)
+    #     cwl_stderr = local_output_dir + 'stderr.txt'
+    #     desc.setStderr(cwl_stderr)
+    #
+    #     job = job_api.submitJob(scheduler, desc)
+    #     job_api.waitUntilDone(job, 1000)
+    #
+    #     job_status = job_api.getJobStatus(job)
+    #     exit_code = job_status.getExitCode()
+    #
+    # log = ['STDERR:\n']
+    # with open(cwl_stderr) as f:
+    #     log += f.readlines()
+    # log.append('STDOUT:\n')
+    # with open(cwl_stdout) as f:
+    #     log += f.readlines()
+
+    args = 'cwl-runner {0} --input {1}/{2} --output {3}'.format(workflow_file, local_input_dir, input_file, output_file)
+
+    logging.warning(args)
+
+    p = subprocess.Popen(args,
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         close_fds=False,
+                         cwd=local_output_dir)
+    (child_stdout, child_stderr) = p.communicate()
+    exit_code = p.returncode
+    log = ['STDERR:\n', child_stderr, 'STDOUT:\n', child_stdout]
+
+    logging.warning('Completed cwl run')
+
+    return exit_code, ''.join(log)
 
 
 def run_docker(image, input_file, local_input_dir, local_output_dir, output_file):
@@ -120,4 +191,4 @@ def run_docker(image, input_file, local_input_dir, local_output_dir, output_file
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', threaded=True)

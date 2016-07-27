@@ -1,0 +1,11 @@
+language: python
+sudo: required
+python:
+  - "2.7"
+services:
+- docker
+install:
+- pip install -U setuptools wheel
+- pip install cwl-runner
+script:
+- ./example/cwa.tool.cwl --input README.md --output README.wc
