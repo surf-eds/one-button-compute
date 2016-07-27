@@ -1,34 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="onebutApp">
 <head>
     <meta charset="UTF-8">
     <title>One Button Compute</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
           integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    <script lang="javascript">
+        angular.module('onebutApp', []).controller('JobController', function($http, $interval) {
+            var $ctrl = this;
+            this.query = {
+                cwl_workflow: '',
+                inputfile: '',
+                outputdir: ''
+            };
+            this.job = {
+                state: 'UNKNOWN'
+            };
+            this.label_info = 'label-default';
+            this.job_url = '';
+            var job_submission_url = "{{ url_for('submit_job') }}";
+
+            this.submitJob = function() {
+                $http.post(job_submission_url, $ctrl.query).then(this.successSubmitJob.bind(this), this.errorSubmitJob.bind(this));
+            };
+
+            var poller;
+            this.successSubmitJob = function(response) {
+                this.job_url = response.data.id;
+                poller = $interval(function() {
+                    $http.get(this.job_url).then(this.successStatusJob.bind(this), this.errorStatusJob.bind(this));
+                }.bind(this), 1000);
+            };
+            this.successStatusJob = function(response) {
+                this.job = response.data;
+                if (this.job.state === 'SUCCESS') {
+                    $ctrl.label_info = 'label-success';
+                    $interval.cancel(poller);
+                } else if (this.job.state === 'FAILURE') {
+                    $ctrl.label_info = 'label-danger';
+                    $interval.cancel(poller);
+                }
+            };
+
+            this.errorSubmitJob = function(response) {
+                alert('Job submission failed');
+            };
+            this.errorStatusJob = function() {
+                $interval.cancel(poller);
+                alert('Job status request failed');
+            };
+        });
+    </script>
 </head>
-<body>
+<body ng-controller="JobController as $ctrl">
 <div class="container">
     <div class="row">
         <h1>One Button compute</h1>
         First upload your files to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>.
-        <form action="{{ url_for('compute') }}" method="post">
+        <form ng-submit="$ctrl.submitJob()" method="post">
             <div class="form-group">
                 <label for="cwl_workflow">CWL workflow file</label>
-                <input type="text" class="form-control" id="cwl_workflow" name="cwl_workflow"
+                <input type="text" class="form-control" id="cwl_workflow" ng-model="$ctrl.query.cwl_workflow"
                        placeholder="File path on Beehub">
             </div>
             <div class="form-group">
                 <label for="inputfile">Input file</label>
-                <input type="text" class="form-control" id="inputfile" name="inputfile"
+                <input type="text" class="form-control" id="inputfile" ng-model="$ctrl.query.inputfile"
                        placeholder="File path on Beehub">
             </div>
             <div class="form-group">
                 <label for="outputdir">Output directory</label>
-                <input type="text" class="form-control" id="outputdir" name="outputdir"
+                <input type="text" class="form-control" id="outputdir" ng-model="$ctrl.query.outputdir"
                        placeholder="Directory path on Beehub">
             </div>
             <button type="submit" class="btn btn-primary btn-lg">Submit</button>
         </form>
+    </div>
+    <hr/>
+    <div class="row">
+        <div ng-hide="$ctrl.job.state === 'UNKNOWN'">
+        <h3><span class="label" ng-class="$ctrl.label_info">{{ '{{ $ctrl.job.state }}' }}</span></h3>
+        </div>
+        <!-- {{ '{{ $ctrl.job_url }}' }} -->
+        <div ng-show="$ctrl.job.state === 'SUCCESS'">
+            Results can be found at <a href="{{ '{{ $ctrl.job.result[2] }}' }}">{{ '{{ $ctrl.job.result[2] }}' }}</a>.
+
+            <p>Exit code was {{ '{{ $ctrl.job.result[0] }}' }}.</p>
+            <p>Log:</p>
+            <pre>{{ '{{ $ctrl.job.result[1] }}' }}</pre>
+        </div>
     </div>
 </div>
 </body>

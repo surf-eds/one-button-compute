@@ -54,6 +54,12 @@ script
 end script
 ```
 
+3. Start redis server
+
+```
+docker run -d -p 6379:6379 redis
+```
+
 # Run
 
 ```
@@ -64,5 +70,6 @@ cp settings.cfg-dist settings.cfg
 Add Beehub credentials to settings.cfg and start web server with
 
 ```
+celery worker -A onebuttoncompute.celery &
 python onebuttoncompute.py
 ```

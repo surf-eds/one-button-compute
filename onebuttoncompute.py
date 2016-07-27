@@ -4,7 +4,8 @@ import shutil
 import tempfile
 import uuid
 from urlparse import urlparse
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, jsonify, url_for
+from celery import Celery
 import easywebdav
 import subprocess
 from cwltool.load_tool import fetch_document, validate_document, make_tool
@@ -12,8 +13,17 @@ from cwltool.workflow import defaultMakeTool
 from cwltool.main import load_job_order
 from docker import Client as DockerClient
 
+
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERY_TRACK_STARTED'] = True
+app.config['CELERY_TASK_SERIALIZER'] = 'json'
+app.config['CELERY_ACCEPT_CONTENT'] = ['json']
+
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 
 class BeeHub(object):
@@ -51,18 +61,35 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/compute', methods=['POST'])
-def compute():
-    remote_input_file = request.form['inputfile']
-    remote_workflow_file = request.form['cwl_workflow']
-    remote_output_dir = request.form['outputdir']
+@app.route('/jobs', methods=['POST'])
+def submit_job():
+    data = request.get_json()
+    remote_input_file = data['inputfile']
+    remote_workflow_file = data['cwl_workflow']
+    remote_output_dir = data['outputdir']
 
-    exit_code, log, result_url = perform_computation(remote_workflow_file, remote_input_file, remote_output_dir)
+    job = perform_computation.delay(remote_workflow_file, remote_input_file, remote_output_dir)
+    return redirect("/jobs/{0}".format(job.id))
 
-    return render_template('result.html', result_url=result_url, exit_code=exit_code, log=log)
+
+@app.route('/jobs/<job_id>', methods=['GET'])
+def status_job(job_id):
+    job = perform_computation.AsyncResult(job_id)
+    response = {
+        'id': url_for('status_job', job_id=job_id),
+        'state': job.state,
+    }
+    if job.successful():
+        response['result'] = job.result
+    elif job.failed():
+        # result is an exception
+        response['result'] = str(job.result)
+    return jsonify(response)
 
 
-def perform_computation(remote_workflow_file, remote_input_file, remote_output_dir):
+@celery.task(bind=True)
+def perform_computation(self, remote_workflow_file, remote_input_file, remote_output_dir):
+    self.update_state(state='PRESTAGING')
     session_dir = tempfile.mkdtemp('-session', prefix='onebuttoncompute-')
     local_input_dir = session_dir + '/in'
     os.mkdir(local_input_dir)
@@ -80,8 +107,10 @@ def perform_computation(remote_workflow_file, remote_input_file, remote_output_d
     beehub.download(remote_workflow_file, local_workflow_file)
     output_file = 'output'
 
+    self.update_state(state='RUNNING')
     exit_code, log = run_cwl(local_workflow_file, input_file, local_input_dir, local_output_dir, output_file)
 
+    self.update_state(state='POSTSTAGING')
     logging.warning('Uploading output file')
     # Upload content of output dir to Beehub
     remote_output_file = remote_output_dir + '/' + output_file
