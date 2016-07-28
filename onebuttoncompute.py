@@ -125,7 +125,6 @@ def perform_computation(self, remote_workflow_file, remote_input_file, remote_ou
 
 
 def run_cwl(workflow_file, input_file, local_input_dir, local_output_dir, output_file):
-
     logging.warning('Validating cwl')
     document_loader, workflowobj, uri = fetch_document(workflow_file)
     document_loader, avsc_names, processobj, metadata, uri = validate_document(document_loader, workflowobj, uri)

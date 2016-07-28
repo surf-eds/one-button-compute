@@ -7,7 +7,7 @@ Web site runs a workflow.
 # Feature/Limitations
 
 * Workflow is a single file in [Common Workflow format](http://www.commonwl.org/)
-* Workflow must take single output file (--input option) and generates a single output file (--output option)
+* Workflow must take single input file (--input option) and generates a single output file (--output option)
 * The workflow, input file are downloaded from a webdav server
 * The output file is uploaded to a webdav server
 
