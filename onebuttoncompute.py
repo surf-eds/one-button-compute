@@ -16,8 +16,6 @@ from docker import Client as DockerClient
 
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 app.config['CELERY_TRACK_STARTED'] = True
 app.config['CELERY_TASK_SERIALIZER'] = 'json'
 app.config['CELERY_ACCEPT_CONTENT'] = ['json']

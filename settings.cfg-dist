@@ -1,3 +1,7 @@
+# Web application and Celery workers must be able to connect to redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 BEEHUB_ROOT = '<FILLMEIN>'
 BEEHUB_USERNAME = '<FILLMEIN>'
 BEEHUB_PASSWORD = '<FILLMEIN>'
