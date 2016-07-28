@@ -4,3 +4,4 @@ docker-py
 cwl-runner
 celery
 redis
+ruamel.yaml

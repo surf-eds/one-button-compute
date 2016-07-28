@@ -11,8 +11,9 @@
             var $ctrl = this;
             this.query = {
                 cwl_workflow: '',
-                inputfile: '',
-                outputdir: ''
+                inputdir: '',
+                outputdir: '',
+                outputextension: '.out'
             };
             this.job = {
                 state: 'UNKNOWN'
@@ -56,24 +57,35 @@
 <body ng-controller="JobController as $ctrl">
 <div class="container">
     <div class="row">
-        <h1>One Button compute</h1>
-        First upload your files to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>.
+        <h1>One Button Compute</h1>
+        <p>
+        Paths in form are relative to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>, the input files and workflow file should be uploaded <a href="{{ config['BEEHUB_ROOT'] }}">there</a>.
+        All files in the input directory will be processed by the workflow.
+        </p>
+    </div>
+    <div class="row">
         <form ng-submit="$ctrl.submitJob()" method="post">
-            <div class="form-group">
+            <fieldset class="form-group col-md-4">
+                <legend>Input</legend>
+                <label for="inputdir">Directory</label>
+                <input type="text" class="form-control" id="inputdir" ng-model="$ctrl.query.inputdir"
+                       placeholder="Directory path on Beehub">
+            </fieldset>
+            <fieldset class="form-group col-md-4">
+                <legend>Compute</legend>
                 <label for="cwl_workflow">CWL workflow file</label>
                 <input type="text" class="form-control" id="cwl_workflow" ng-model="$ctrl.query.cwl_workflow"
                        placeholder="File path on Beehub">
-            </div>
-            <div class="form-group">
-                <label for="inputfile">Input file</label>
-                <input type="text" class="form-control" id="inputfile" ng-model="$ctrl.query.inputfile"
-                       placeholder="File path on Beehub">
-            </div>
-            <div class="form-group">
-                <label for="outputdir">Output directory</label>
+            </fieldset>
+            <fieldset class="form-group col-md-4">
+                <legend>Output</legend>
+                <label for="outputdir">Directory</label>
                 <input type="text" class="form-control" id="outputdir" ng-model="$ctrl.query.outputdir"
                        placeholder="Directory path on Beehub">
-            </div>
+                <label for="outputextension">Extension</label>
+                <input type="text" class="form-control" id="outputextension" ng-model="$ctrl.query.outputextension"
+                       >
+            </fieldset>
             <button type="submit" class="btn btn-primary btn-lg">Submit</button>
         </form>
     </div>
