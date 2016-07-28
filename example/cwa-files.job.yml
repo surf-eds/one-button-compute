@@ -1,0 +1,9 @@
+input_files:
+  - class: File
+    path: README.md
+  - class: File
+    path: Dockerfile
+output_filenames:
+- README.md.wc
+- Dockerfile.wc
+
