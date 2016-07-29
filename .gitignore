@@ -42,5 +42,5 @@ coverage.xml
 # The config
 settings.cfg
 
-# Minio persisitence
+# Minio persistence
 minio

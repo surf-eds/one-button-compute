@@ -17,7 +17,7 @@ The remote storage server can be WebDAV or S3.
 * The WebDAV server used for production is BeeHub (https://www.beehub.nl)
 * The WebDAV server used for local development can be the Docker container `nlesc/xenon-webdav` (https://hub.docker.com/r/nlesc/xenon-webdav/)
 * The S3 server used for production is a Openstack Swift (http://swift.openstack.org) instance
-* The S3 server used for local development is Minio (https://minio.io) instance
+* The S3 server used for local development is Minio (https://minio.io) instance, Minio is a single user S3 compliant server
 
 # Requirements
 

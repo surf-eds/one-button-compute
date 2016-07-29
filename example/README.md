@@ -61,6 +61,8 @@ The job order file (cwa-files.job.yml) contains the list of input files and outp
 
 ### Upload & run using Minio server
 
+Requires a Minio server, see "S3 development server" section ../README.md for instructions.
+
 With S3_ROOT of 'http://localhost:9000/mybucket/obc'
 ```
 mc config host add myminio http://localhost:9000 *** ***
