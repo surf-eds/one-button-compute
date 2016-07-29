@@ -98,7 +98,6 @@ def remote_storage_client(config):
         return S3Client(config['S3_ROOT'],
                         config['S3_ACCESS_KEY'],
                         config['S3_SECRET_KEY'],
-                        config['S3_REGION'],
                         )
 
 
