@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import subprocess
 import shutil
 import tempfile
@@ -119,7 +120,8 @@ def submit_job():
     remote_input_dir = data['inputdir'].rstrip('/')
     remote_workflow_file = data['cwl_workflow']
     remote_output_dir = data['outputdir'].rstrip('/')
-    # TODO validate extension, it should not contain dangerous chars, as it will be part of an argument of a system call
+    if re.compile('[^a-zA-Z0-9-_.]').search(data['outputextension']):
+        raise ValueError('outputextension can only contain alphanumeric or -_.')
     output_extension = data['outputextension']
 
     job = perform_computation.delay(remote_workflow_file, remote_input_dir, remote_output_dir, output_extension)
