@@ -39,7 +39,7 @@ This will execute cwa script inside Docker container using cwl-runner.
 
 Must use version >= v2.0.0 and < 3.0.0 of one-button-compute repo.
 
-1. Upload a text file and workflow file (cwa.tool.cwl) to a BeeHub (https://www.beehub.nl).
+1. Upload a text file and workflow file (cwa.tool.cwl) to the WebDAV server configured in the settings.cfg file.
 2. Create a output directory on Beehub.
 3. Submit in web application
 

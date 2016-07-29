@@ -1,6 +1,5 @@
-flask==0.10.1
+flask
 easywebdav
-docker-py
 cwl-runner
 celery
 redis

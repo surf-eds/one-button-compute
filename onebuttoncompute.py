@@ -3,7 +3,6 @@ import os
 import subprocess
 import shutil
 import tempfile
-import uuid
 from urlparse import urlparse
 
 from celery import Celery
@@ -23,7 +22,7 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 
-class BeeHub(object):
+class WebDAV(object):
     def __init__(self, root, username, password):
         o = urlparse(root)
         logging.warning(o)
@@ -37,13 +36,6 @@ class BeeHub(object):
         )
         self.username = username
         self.password = password
-
-    @classmethod
-    def from_config(cls, config):
-        return BeeHub(config['BEEHUB_ROOT'],
-                      config['BEEHUB_USERNAME'],
-                      config['BEEHUB_PASSWORD'],
-                      )
 
     def download(self, source, target):
         logging.warning(('Download', self.path + '/' + source, target))
@@ -62,7 +54,16 @@ class BeeHub(object):
             list: File name or directory (ends with /) relative to path
         """
         fpath = self.path + '/' + path
-        return [d.name.replace(fpath + '/', '') for d in self.client.ls(fpath) if d.name != fpath + '/']
+        listing = self.client.ls(fpath)
+        return [d.name.replace(fpath + '/', '') for d in listing if d.name != fpath + '/']
+
+
+def remote_storage_client(config):
+    if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
+        return WebDAV(config['WEBDAV_ROOT'],
+                      config['WEBDAV_USERNAME'],
+                      config['WEBDAV_PASSWORD'],
+                      )
 
 
 @app.route('/', methods=['GET'])
@@ -147,10 +148,10 @@ def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='work
 @celery.task(bind=True)
 def perform_computation(self, remote_workflow_file, remote_input_dir, remote_output_dir, output_extension):
     self.update_state(state='PRESTAGING')
-    beehub = BeeHub.from_config(app.config)
+    remote_storage = remote_storage_client(app.config)
     local_input_dir, local_output_dir, session_dir = create_session_dir()
-    workflow_file = fetch_workflow(beehub, session_dir, remote_workflow_file)
-    input_files = fetch_input_files(beehub, local_input_dir, remote_input_dir)
+    workflow_file = fetch_workflow(remote_storage, session_dir, remote_workflow_file)
+    input_files = fetch_input_files(remote_storage, local_input_dir, remote_input_dir)
     output_files = ['{0}.{1}'.format(d, output_extension) for d in input_files]
     job_order_file = write_job_order(session_dir, input_files, output_files)
     workflow_wrapper_file = write_workflow_wrapper(session_dir, workflow_file)
@@ -159,7 +160,7 @@ def perform_computation(self, remote_workflow_file, remote_input_dir, remote_out
     exit_code, log = run_cwl(workflow_wrapper_file, job_order_file, local_output_dir)
 
     self.update_state(state='POSTSTAGING')
-    upload_output_files(beehub, local_output_dir, output_files, remote_output_dir)
+    upload_output_files(remote_storage, local_output_dir, output_files, remote_output_dir)
     shutil.rmtree(session_dir)
 
     result_url = app.config['BEEHUB_ROOT'] + '/' + remote_output_dir
