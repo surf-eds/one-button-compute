@@ -8,7 +8,7 @@ requirements:
   dockerImageId: wca
   dockerFile: |
     FROM alpine
-    RUN echo -e '#!/bin/sh\nsleep 10\nwc $1 > $2\n' > /bin/wca && chmod +x /bin/wca
+    RUN echo -e '#!/bin/sh\nsleep 10\nwc $1 > $2\necho Something to stdout\n(>&2 echo "Something to stderr")' > /bin/wca && chmod +x /bin/wca
 inputs:
   input:
     type: File

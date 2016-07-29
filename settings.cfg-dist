@@ -2,6 +2,12 @@
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-BEEHUB_ROOT = '<FILLMEIN>'
-BEEHUB_USERNAME = '<FILLMEIN>'
-BEEHUB_PASSWORD = '<FILLMEIN>'
+# remote storage type can be WEBDAV
+# type WEBDAV needs the WEBDAV_* keys to be configured
+REMOTE_STORAGE_TYPE = 'WEBDAV'
+
+# URI on WebDAV server which will be used to read and write to.
+# All paths used will be relative to this root
+WEBDAV_ROOT = '<FILLMEIN>'
+WEBDAV_USERNAME = '<FILLMEIN>'
+WEBDAV_PASSWORD = '<FILLMEIN>'
