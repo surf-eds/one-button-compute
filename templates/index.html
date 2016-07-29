@@ -18,11 +18,13 @@
             this.job = {
                 state: 'UNKNOWN'
             };
-            this.label_info = 'label-default';
+            this.state_cls = 'btn-default';
             this.job_url = '';
             var job_submission_url = "{{ url_for('submit_job') }}";
 
             this.submitJob = function() {
+                $ctrl.state_cls = 'btn-default';
+                $ctrl.job.state = 'SUBMITTING';
                 $http.post(job_submission_url, $ctrl.query).then(this.successSubmitJob.bind(this), this.errorSubmitJob.bind(this));
             };
 
@@ -36,10 +38,10 @@
             this.successStatusJob = function(response) {
                 this.job = response.data;
                 if (this.job.state === 'SUCCESS') {
-                    $ctrl.label_info = 'label-success';
+                    $ctrl.state_cls = 'btn-success';
                     $interval.cancel(poller);
                 } else if (this.job.state === 'FAILURE') {
-                    $ctrl.label_info = 'label-danger';
+                    $ctrl.state_cls = 'btn-danger';
                     $interval.cancel(poller);
                 }
             };
@@ -83,24 +85,25 @@
                 <input type="text" class="form-control" id="outputdir" ng-model="$ctrl.query.outputdir"
                        placeholder="Directory path on Beehub">
                 <label for="outputextension">Extension</label>
-                <input type="text" class="form-control" id="outputextension" ng-model="$ctrl.query.outputextension"
-                       >
+                <input type="text" class="form-control" id="outputextension" ng-model="$ctrl.query.outputextension">
             </fieldset>
             <button type="submit" class="btn btn-primary btn-lg">Submit</button>
         </form>
     </div>
     <hr/>
     <div class="row">
-        <div ng-hide="$ctrl.job.state === 'UNKNOWN'">
-        <h3><span class="label" ng-class="$ctrl.label_info">{{ '{{ $ctrl.job.state }}' }}</span></h3>
-        </div>
-        <!-- {{ '{{ $ctrl.job_url }}' }} -->
-        <div ng-show="$ctrl.job.state === 'SUCCESS'">
-            Results can be found at <a href="{{ '{{ $ctrl.job.result[2] }}' }}">{{ '{{ $ctrl.job.result[2] }}' }}</a>.
-
-            <p>Exit code was {{ '{{ $ctrl.job.result[0] }}' }}.</p>
+        <p ng-hide="$ctrl.job.state == 'UNKNOWN'">
+        <a class="btn btn-lg" ng-class="$ctrl.state_cls" role="button" href="{{ '{{ $ctrl.job_url }}' }}">{{ '{{ $ctrl.job.state }}' }}</a>
+        </p>
+        <div class="result" ng-show="$ctrl.job.state == 'SUCCESS' || $ctrl.job.state == 'FAILURE'">
+            <p ng-show="$ctrl.job.state == 'SUCCESS'">
+            Output: <a href="{{ '{{ $ctrl.job.result.url }}' }}">{{ '{{ $ctrl.job.result.url }}' }}</a>
+            </p>
+            <p>Exit code: {{ '{{ $ctrl.job.result.exit_code }}' }}</p>
             <p>Log:</p>
-            <pre>{{ '{{ $ctrl.job.result[1] }}' }}</pre>
+            <pre>{{ '{{ $ctrl.job.result.log }}' }}</pre>
+            <p>Output-object from cwl-runner:</p>
+            <pre>{{ '{{ $ctrl.job.result.output_object | json : spacing }}' }}</pre>
         </div>
     </div>
 </div>

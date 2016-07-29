@@ -66,6 +66,11 @@ def remote_storage_client(config):
                       )
 
 
+def remote_url(config, path):
+    if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
+        return config['WEBDAV_ROOT'] + '/' + path
+
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -74,9 +79,10 @@ def index():
 @app.route('/jobs', methods=['POST'])
 def submit_job():
     data = request.get_json()
-    remote_input_dir = data['inputdir']
+    remote_input_dir = data['inputdir'].rstrip('/')
     remote_workflow_file = data['cwl_workflow']
-    remote_output_dir = data['outputdir']
+    remote_output_dir = data['outputdir'].rstrip('/')
+    # TODO validate extension, it should not contain dangerous chars, as it will be part of an argument of a system call
     output_extension = data['outputextension']
 
     job = perform_computation.delay(remote_workflow_file, remote_input_dir, remote_output_dir, output_extension)
@@ -98,15 +104,18 @@ def status_job(job_id):
     return jsonify(response)
 
 
-def write_job_order(session_dir, input_files, output_files, job_order_fn='job.yml'):
+def write_job_order(session_dir, input_dir, input_files, output_files, job_order_fn='job.yml'):
     abs_job_order_fn = session_dir + '/' + job_order_fn
-    cwl_input_files = [{'class': 'File', 'path': d} for d in input_files]
+    cwl_input_files = [{'class': 'File', 'path': input_dir + '/' + d} for d in input_files]
     data = {
         'input_files': cwl_input_files,
         'output_filenames': output_files,
     }
+
+    logging.warning(data)
+
     with open(abs_job_order_fn, 'w') as f:
-        yaml.dump(data, f)
+        yaml.dump(data, f, Dumper=yaml.SafeDumper)
     return job_order_fn
 
 
@@ -141,37 +150,41 @@ def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='work
     }
 
     with open(abs_workflow_wrapper_fn, 'w') as f:
-        yaml.dump(wrapper, f)
+        yaml.dump(wrapper, f, Dumper=yaml.SafeDumper)
     return workflow_wrapper_fn
 
 
 @celery.task(bind=True)
-def perform_computation(self, remote_workflow_file, remote_input_dir, remote_output_dir, output_extension):
+def perform_computation(self, remote_workflow_file, remote_input_dir, remote_output_dir, output_extension=''):
     self.update_state(state='PRESTAGING')
     remote_storage = remote_storage_client(app.config)
-    local_input_dir, local_output_dir, session_dir = create_session_dir()
+    input_dir = 'in'
+    output_dir = 'out'
+    local_input_dir, local_output_dir, session_dir = create_session_dir(input_dir, output_dir)
     workflow_file = fetch_workflow(remote_storage, session_dir, remote_workflow_file)
     input_files = fetch_input_files(remote_storage, local_input_dir, remote_input_dir)
-    output_files = ['{0}.{1}'.format(d, output_extension) for d in input_files]
-    job_order_file = write_job_order(session_dir, input_files, output_files)
+    output_files = ['{0}{1}'.format(d, output_extension) for d in input_files]
+    job_order_file = write_job_order(session_dir, input_dir, input_files, output_files)
     workflow_wrapper_file = write_workflow_wrapper(session_dir, workflow_file)
 
     self.update_state(state='RUNNING')
-    exit_code, log = run_cwl(workflow_wrapper_file, job_order_file, local_output_dir)
+    result = run_cwl(workflow_wrapper_file, job_order_file, session_dir, output_dir)
+
+    logging.warning(result)
 
     self.update_state(state='POSTSTAGING')
     upload_output_files(remote_storage, local_output_dir, output_files, remote_output_dir)
     shutil.rmtree(session_dir)
 
-    result_url = app.config['BEEHUB_ROOT'] + '/' + remote_output_dir
-    return exit_code, log, result_url
+    result_url = remote_url(app.config, remote_output_dir)
+    result['url'] = result_url
+    return result
 
 
-def create_session_dir():
+def create_session_dir(input_dir, output_dir):
     session_dir = tempfile.mkdtemp('-session', prefix='onebuttoncompute-')
-    local_input_dir = session_dir + '/in'
+    local_input_dir = session_dir + '/' + input_dir
     os.mkdir(local_input_dir)
-    output_dir = 'out'
     local_output_dir = session_dir + '/' + output_dir
     os.mkdir(local_output_dir)
     return local_input_dir, local_output_dir, session_dir
@@ -203,16 +216,16 @@ def fetch_workflow(beehub, local_input_dir, remote_workflow_file, workflow_file=
     local_workflow_file = local_input_dir + '/' + workflow_file
     beehub.download(remote_workflow_file, local_workflow_file)
     logging.warning('Validating cwl')
-    document_loader, workflowobj, uri = fetch_document(workflow_file)
+    document_loader, workflowobj, uri = fetch_document(local_workflow_file)
     validate_document(document_loader, workflowobj, uri)
     return local_workflow_file
 
 
-def run_cwl(workflow_file, job_order_file, local_output_dir):
+def run_cwl(workflow_file, job_order_file, session_dir, output_dir):
 
     logging.warning('Running cwl')
 
-    args = 'cwl-runner {0} {1}'.format(workflow_file, job_order_file)
+    args = 'cwl-runner --quiet --outdir {0} {1} {2}'.format(output_dir, workflow_file, job_order_file)
 
     logging.warning(args)
 
@@ -221,14 +234,14 @@ def run_cwl(workflow_file, job_order_file, local_output_dir):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
                          close_fds=False,
-                         cwd=local_output_dir)
+                         cwd=session_dir)
     (child_stdout, child_stderr) = p.communicate()
     exit_code = p.returncode
-    log = ['STDERR:\n', child_stderr, 'STDOUT:\n', child_stdout]
 
     logging.warning('Completed cwl run')
+    output_object = yaml.load(child_stdout)
 
-    return exit_code, ''.join(log)
+    return {'exit_code': exit_code, 'log': child_stderr, 'output_object': output_object}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
