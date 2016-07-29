@@ -3,3 +3,5 @@ easywebdav
 cwl-runner
 celery
 redis
+minio
+python-magic

@@ -39,8 +39,8 @@ This will execute cwa script inside Docker container using cwl-runner.
 
 Must use version >= v2.0.0 and < 3.0.0 of one-button-compute repo.
 
-1. Upload a text file and workflow file (cwa.tool.cwl) to the WebDAV server configured in the settings.cfg file.
-2. Create a output directory on Beehub.
+1. Upload a text file and workflow file (cwa.tool.cwl) to the remote storage server configured in the settings.cfg file.
+2. Create a output directory on remote storage server.
 3. Submit in web application
 
 * CWL workflow file: cwa.tool.cwl
@@ -49,6 +49,8 @@ Must use version >= v2.0.0 and < 3.0.0 of one-button-compute repo.
 
 # Multiple files
 
+Must use version >= v3.0.0 of one-button-compute repo.
+
 ## Run using cwl-runner
 
 The job order file (cwa-files.job.yml) contains the list of input files and output filenames.
@@ -56,3 +58,20 @@ The job order file (cwa-files.job.yml) contains the list of input files and outp
 ```
 ./example/cwa-files.tool.cwl cwa-files.job.yml
 ```
+
+### Upload & run using Minio server
+
+With S3_ROOT of 'http://localhost:9000/mybucket/obc'
+```
+mc config host add myminio http://localhost:9000 *** ***
+mc mb myminio/mybucket
+mc cp cwa.tool.cwl myminio/mybucket/obc/run1/cwa.tool.cwl
+mc cp README.md myminio/mybucket/obc/run1/input/file1.txt
+mc cp cwa.tool.cwl myminio/mybucket/obc/run1/input/file2.txt
+```
+
+In the One Button Compute web interface fill form with
+
+* Input directory = run1/input
+* CWL workflow file = run1/cwa.tool.cwl
+* Output directory = run1/output

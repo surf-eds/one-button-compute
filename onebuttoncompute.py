@@ -9,6 +9,8 @@ from celery import Celery
 from cwltool.load_tool import fetch_document, validate_document
 from flask import Flask, render_template, request, redirect, jsonify, url_for
 import easywebdav
+import magic
+import minio
 import ruamel.yaml as yaml
 
 app = Flask(__name__)
@@ -22,7 +24,7 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 
-class WebDAV(object):
+class WebDAVClient(object):
     def __init__(self, root, username, password):
         o = urlparse(root)
         logging.warning(o)
@@ -38,7 +40,6 @@ class WebDAV(object):
         self.password = password
 
     def download(self, source, target):
-        logging.warning(('Download', self.path + '/' + source, target))
         return self.client.download(self.path + '/' + source, target)
 
     def upload(self, source, target):
@@ -58,17 +59,53 @@ class WebDAV(object):
         return [d.name.replace(fpath + '/', '') for d in listing if d.name != fpath + '/']
 
 
+class S3Client(object):
+    def __init__(self, root, access_key, secret_key):
+        o = urlparse(root)
+        endpoint = o.netloc
+        if o.scheme == 'https':
+            secure = True
+        elif o.scheme == 'http':
+            secure = False
+        else:
+            raise ValueError('Scheme "{0}" not supported'.format(o.scheme))
+        paths = o.path.strip('/').split('/')
+        self.bucket = paths.pop(0)
+        self.prefix = '/'.join(paths)
+        self.client = minio.Minio(endpoint=endpoint, access_key=access_key, secret_key=secret_key, secure=secure)
+
+    def download(self, source, target):
+        return self.client.fget_object(self.bucket, self.prefix + '/' + source, target)
+
+    def upload(self, source, target):
+        content_type = magic.from_file(source, mime=True)
+        return self.client.fput_object(self.bucket, self.prefix + '/' + target, source, content_type)
+
+    def ls(self, path):
+        fpath = self.prefix + '/' + path + '/'
+        listing = self.client.list_objects(self.bucket, prefix=fpath)
+        return [d.object_name.replace(fpath, '') for d in listing]
+
+
 def remote_storage_client(config):
     if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
-        return WebDAV(config['WEBDAV_ROOT'],
-                      config['WEBDAV_USERNAME'],
-                      config['WEBDAV_PASSWORD'],
-                      )
+        return WebDAVClient(config['WEBDAV_ROOT'],
+                            config['WEBDAV_USERNAME'],
+                            config['WEBDAV_PASSWORD'],
+                            )
+    elif config['REMOTE_STORAGE_TYPE'] is 'S3':
+        return S3Client(config['S3_ROOT'],
+                        config['S3_ACCESS_KEY'],
+                        config['S3_SECRET_KEY'],
+                        config['S3_REGION'],
+                        )
 
 
 def remote_url(config, path):
     if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
         return config['WEBDAV_ROOT'] + '/' + path
+    elif config['REMOTE_STORAGE_TYPE'] is 'S3':
+        return config['S3_ROOT'] + '/' + path
 
 
 @app.route('/', methods=['GET'])
@@ -190,23 +227,25 @@ def create_session_dir(input_dir, output_dir):
     return local_input_dir, local_output_dir, session_dir
 
 
-def upload_output_files(beehub, local_output_dir, output_files, remote_output_dir):
+def upload_output_files(remote_storage, local_output_dir, output_files, remote_output_dir):
     # TODO update celery state with number of files copied vs total
     # TODO perform copy of files in parallel using Celery group
     for output_file in output_files:
         local_output_file = local_output_dir + '/' + output_file
         remote_output_file = remote_output_dir + '/' + output_file
-        beehub.upload(local_output_file, remote_output_file)
+        logging.info('Uploading "' + local_output_file + '" to "' + remote_output_file + '"')
+        remote_storage.upload(local_output_file, remote_output_file)
 
 
-def fetch_input_files(beehub, local_input_dir, remote_input_dir):
+def fetch_input_files(remote_storage, local_input_dir, remote_input_dir):
     # TODO update celery state with number of files copied vs total
     # TODO perform copy of files in parallel using Celery group
     input_files = []
-    for input_file in beehub.ls(remote_input_dir):
+    for input_file in remote_storage.ls(remote_input_dir):
         remote_input_file = remote_input_dir + '/' + input_file
         local_input_file = local_input_dir + '/' + input_file
-        beehub.download(remote_input_file, local_input_file)
+        logging.info('Downloading "' + remote_input_file + '" to "' + local_input_file + '"')
+        remote_storage.download(remote_input_file, local_input_file)
         input_files.append(input_file)
     return input_files
 
