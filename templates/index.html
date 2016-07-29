@@ -12,6 +12,7 @@
             this.query = {
                 cwl_workflow: '',
                 inputdir: '',
+                inputitemtype: 'file',
                 outputdir: '',
                 outputextension: '.out'
             };
@@ -65,31 +66,67 @@
         All files in the input directory will be processed by the workflow.
         </p>
     </div>
-    <div class="row">
-        <form ng-submit="$ctrl.submitJob()" method="post">
+    <form ng-submit="$ctrl.submitJob()" method="post">
+        <div class="row">
             <fieldset class="form-group col-md-4">
                 <legend>Input</legend>
                 <label for="inputdir">Directory</label>
                 <input type="text" class="form-control" id="inputdir" ng-model="$ctrl.query.inputdir"
                        placeholder="Directory path on Beehub">
+
+                <div class="control-group">
+                    <label class="control-label">Items in directory are</label>
+                    <div class="controls">
+                        <label class="radio-inline">
+                          <input type="radio" ng-model="$ctrl.query.inputitemtype" value="file">Files
+                        </label>
+                        <label class="radio-inline">
+                          <input type="radio" ng-model="$ctrl.query.inputitemtype" value="dir">Directories
+                        </label>
+                    </div>
+                </div>
             </fieldset>
             <fieldset class="form-group col-md-4">
                 <legend>Compute</legend>
                 <label for="cwl_workflow">CWL workflow file</label>
                 <input type="text" class="form-control" id="cwl_workflow" ng-model="$ctrl.query.cwl_workflow"
                        placeholder="File path on Beehub">
+                <div class="help-block" ng-switch on="$ctrl.query.inputitemtype">
+                    <div class="animate-switch" ng-switch-when="file">
+                        <a href="http://www.commonwl.org/">CWL Workflow</a> must have following input parameters:
+                        <ul>
+                            <li>input, Input file</li>
+                            <li>output, Output file name</li>
+                        </ul>
+                        The workflow must have the following output parameters:
+                        <ul>
+                            <li>outputfile, Output file</li>
+                        </ul>
+                    </div>
+                    <div class="animate-switch" ng-switch-when="dir">
+                        <a href="http://www.commonwl.org/">CWL Workflow</a> must have following input parameters:
+                        <ul>
+                            <li>input, Input directory</li>
+                        </ul>
+                        The output parameters of File type will be copied to the output directory.
+                    </div>
+                </div>
             </fieldset>
             <fieldset class="form-group col-md-4">
                 <legend>Output</legend>
                 <label for="outputdir">Directory</label>
                 <input type="text" class="form-control" id="outputdir" ng-model="$ctrl.query.outputdir"
                        placeholder="Directory path on Beehub">
+                <div class="form-group" ng-hide="$ctrl.query.inputitemtype == 'dir'">
                 <label for="outputextension">Extension</label>
                 <input type="text" class="form-control" id="outputextension" ng-model="$ctrl.query.outputextension">
+                    </div>
             </fieldset>
+        </div>
+        <div class="row">
             <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-        </form>
-    </div>
+        </div>
+    </form>
     <hr/>
     <div class="row">
         <p ng-hide="$ctrl.job.state == 'UNKNOWN'">
