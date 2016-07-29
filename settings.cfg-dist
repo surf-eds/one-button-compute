@@ -2,8 +2,9 @@
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-# remote storage type can be WEBDAV
+# remote storage type can be WEBDAV or S3
 # type WEBDAV needs the WEBDAV_* keys to be configured
+# type S3 needs the S3_ keys to be configured
 REMOTE_STORAGE_TYPE = 'WEBDAV'
 
 # URI on WebDAV server which will be used to read and write to.
@@ -11,3 +12,9 @@ REMOTE_STORAGE_TYPE = 'WEBDAV'
 WEBDAV_ROOT = '<FILLMEIN>'
 WEBDAV_USERNAME = '<FILLMEIN>'
 WEBDAV_PASSWORD = '<FILLMEIN>'
+
+# For Minio use http://hostname:port/bucket/prefix for S3_ROOT.
+# For AWS S3 use 'https://s3.amazonaws.com/bucket/prefix' for S3_ROOT.
+S3_ROOT = '<FILLMEIN>'
+S3_ACCESS_KEY = '<FILLMEIN>'
+S3_SECRET_KEY = '<FILLMEIN>'

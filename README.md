@@ -9,17 +9,21 @@ Web site runs a workflow.
 * Workflow is a single file in [Common Workflow format](http://www.commonwl.org/)
 * Workflow must take single input file (--input option) and generates a single output file (--output option)
 * Web application runs workflow on directory of input files
-* The workflow, the directory with input files is downloaded from a WebDAV server
-* The directory with output files is uploaded to a WebDAV server
+* The workflow, the directory with input files is downloaded from a remote storage server
+* The directory with output files is uploaded to a remote storage server
 
-The WebDAV server used for production is BeeHub (https://www.beehub.nl). 
-The WebDAV server used for local development can be the Docker image nlesc/xenon-webdav (https://hub.docker.com/r/nlesc/xenon-webdav/).
+The remote storage server can be WebDAV or S3.
+
+* The WebDAV server used for production is BeeHub (https://www.beehub.nl)
+* The WebDAV server used for local development can be the Docker container `nlesc/xenon-webdav` (https://hub.docker.com/r/nlesc/xenon-webdav/)
+* The S3 server used for production is a Openstack Swift (http://swift.openstack.org) instance
+* The S3 server used for local development is Minio (https://minio.io) instance
 
 # Requirements
 
 * Python2
 * Docker
-* Read/write access to a remote storage server. Can be a WebDAV server.
+* Read/write access to a remote storage server. Can be a WebDAV or S3 server.
 
 # Install
 
@@ -50,7 +54,31 @@ cp settings.cfg-dist settings.cfg
 
 Configure remote storage type, location and credentials in settings.cfg.
 
-## 4. Reverse proxy (optional)
+## S3 development server (optional)
+
+A Minio server can be started with
+```
+mkdir -p minio/export
+docker run -d --name obc-minio -p 9000:9000 -v $PWD/minio:/root minio/minio /root/export
+docker logs obc-minio
+```
+
+The log output contains the credentials, urls and access instructions.
+
+Use `mc` (https://docs.minio.io/docs/minio-client-quickstart-guide) as CLI client.
+
+## WebDAV development server (optional)
+
+A WebDAV server can be started with
+```
+docker run -d nlesc/xenon-webdav
+```
+
+Read/write can be done in `~/xenon/uploads` path with xenon:javagat credentials.
+
+Use `cadaver` (http://www.webdav.org/cadaver/) as CLI client.
+
+## Reverse proxy (optional)
 
 Configure Nginx as reverse proxy for the flask app port 5000.
 
@@ -60,7 +88,7 @@ location / {
 }
 ```
 
-## 5. Auto start (optional)
+## Auto start (optional)
 
 Automatically start one-button-compute on boot with upstart file
 
