@@ -8,8 +8,9 @@ Web site runs a workflow.
 
 * Workflow is a single file in [Common Workflow format](http://www.commonwl.org/)
 * Workflow must take single input file (--input option) and generates a single output file (--output option)
-* The workflow, input file are downloaded from a WebDAV server
-* The output file is uploaded to a WebDAV server
+* Web application runs workflow on directory of input files
+* The workflow, the directory with input files is downloaded from a WebDAV server
+* The directory with output files is uploaded to a WebDAV server
 
 The WebDAV server used for production is BeeHub (https://www.beehub.nl). 
 The WebDAV server used for local development can be the Docker image nlesc/xenon-webdav (https://hub.docker.com/r/nlesc/xenon-webdav/).
