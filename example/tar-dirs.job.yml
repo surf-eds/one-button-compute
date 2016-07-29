@@ -1,0 +1,8 @@
+input_dirs:
+  - class: Directory
+    path: dir1
+  - class: Directory
+    path: dir2
+output_filenames:
+- dir1.tar.gz
+- dir2.tar.gz

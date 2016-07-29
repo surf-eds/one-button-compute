@@ -77,3 +77,25 @@ In the One Button Compute web interface fill form with
 * Input directory = run1/input
 * CWL workflow file = run1/cwa.tool.cwl
 * Output directory = run1/output
+
+# Multiple directories
+
+Example outputs on file for each input directory.
+
+## Local 
+
+Setup with
+
+```
+mkdir dir1
+cp README.md dir1
+cp cwa.tool.cwl dir1
+cp -r dir1 dir2
+```
+
+Run with
+
+```
+./tar-dirs.workflow.cwl tar-dirs.job.yml
+```
+

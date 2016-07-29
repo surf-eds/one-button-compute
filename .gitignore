@@ -43,4 +43,8 @@ coverage.xml
 settings.cfg
 
 # Minio persistence
-minio
+/minio
+
+# Multi directory example files
+/example/dir?/
+/example/dir?.tar.gz
