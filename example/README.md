@@ -80,7 +80,7 @@ In the One Button Compute web interface fill form with
 
 # Multiple directories
 
-Example outputs on file for each input directory.
+Example outputs a single file for each input directory.
 
 ## Local 
 

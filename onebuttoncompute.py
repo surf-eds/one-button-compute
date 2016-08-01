@@ -144,8 +144,8 @@ def submit_job():
     input_item_type = data.get('inputitemtype', 'file')
     remote_workflow_file = data['cwl_workflow']
     remote_output_dir = data['outputdir'].rstrip('/')
-    outputextension = data.get('outputextension', '')
-    if re.compile('[^a-zA-Z0-9-_.]').search(outputextension):
+    output_extension = data.get('outputextension', '')
+    if re.compile('[^a-zA-Z0-9-_.]').search(output_extension):
         raise ValueError('outputextension can only contain alphanumeric or -_.')
 
     job = perform_computation.delay(remote_workflow_file, remote_input_dir, input_item_type, remote_output_dir, output_extension)

@@ -13,7 +13,6 @@ outputs:
     outputSource: step1/tarball
 requirements:
   - class: ScatterFeatureRequirement
-  - class: StepInputExpressionRequirement
 steps:
   step1:
     run: tar-dir.tool.cwl
