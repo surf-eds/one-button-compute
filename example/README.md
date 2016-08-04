@@ -1,19 +1,17 @@
-Simple docker container that performs a word count.
+Examples which can be used in One Button Compute application.
+
+For more examples see https://github.com/surf-eds/cwl-examples
 
 # Prerequisites
-
-Build Docker image
-Run:
-```
-docker build -t wca .
-```
 
 Install CWL runner.
 ```
 pip install cwl-runner
 ```
 
-# Single file
+# Word count example
+
+Simple docker container that performs a word count.
 
 ## Run using Docker
 
@@ -47,11 +45,8 @@ Must use version >= v2.0.0 and < 3.0.0 of one-button-compute repo.
 * Input file:
 * Output directory:
 
-# Multiple files
+## Run using cwl-runner with multiple files
 
-Must use version >= v3.0.0 of one-button-compute repo.
-
-## Run using cwl-runner
 
 The job order file (cwa-files.job.yml) contains the list of input files and output filenames.
 
@@ -59,7 +54,9 @@ The job order file (cwa-files.job.yml) contains the list of input files and outp
 ./example/cwa-files.tool.cwl cwa-files.job.yml
 ```
 
-### Upload & run using Minio server
+### Run from web app with multiple files and using Minio server
+
+Must use version >= v3.0.0 of one-button-compute repo.
 
 Requires a Minio server, see "S3 development server" section ../README.md for instructions.
 
