@@ -27,6 +27,7 @@ celery.conf.update(app.config)
 
 class WebDAVClient(object):
     def __init__(self, root, username, password):
+        self.root = root
         o = urlparse(root)
         logging.warning(o)
         logging.warning(o.path)
@@ -59,9 +60,13 @@ class WebDAVClient(object):
         listing = self.client.ls(fpath)
         return [d.name.replace(fpath + '/', '') for d in listing if d.name != fpath + '/']
 
+    def url(self, path=''):
+        return self.root + '/' + path
+
 
 class S3Client(object):
     def __init__(self, root, access_key, secret_key):
+        self.root = root
         o = urlparse(root)
         endpoint = o.netloc
         if o.scheme == 'https':
@@ -87,6 +92,9 @@ class S3Client(object):
         listing = self.client.list_objects(self.bucket, prefix=fpath)
         return [d.object_name.replace(fpath, '') for d in listing]
 
+    def url(self, path=''):
+        return self.root + '/' + path
+
 
 def remote_storage_client(config):
     if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
@@ -101,16 +109,11 @@ def remote_storage_client(config):
                         )
 
 
-def remote_url(config, path):
-    if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
-        return config['WEBDAV_ROOT'] + '/' + path
-    elif config['REMOTE_STORAGE_TYPE'] is 'S3':
-        return config['S3_ROOT'] + '/' + path
-
-
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    remote_storage = remote_storage_client(app.config)
+    remote_storage_url = remote_storage.url()
+    return render_template('index.html', remote_storage_url=remote_storage_url)
 
 
 @app.route('/jobs', methods=['POST'])
@@ -251,10 +254,10 @@ def fetch_input_files(remote_storage, local_input_dir, remote_input_dir):
     return input_files
 
 
-def fetch_workflow(beehub, local_input_dir, remote_workflow_file, workflow_file='workflow.cwl'):
+def fetch_workflow(remote_storage, local_input_dir, remote_workflow_file, workflow_file='workflow.cwl'):
     logging.warning('Downloading cwl')
     local_workflow_file = local_input_dir + '/' + workflow_file
-    beehub.download(remote_workflow_file, local_workflow_file)
+    remote_storage.download(remote_workflow_file, local_workflow_file)
     logging.warning('Validating cwl')
     document_loader, workflowobj, uri = fetch_document(local_workflow_file)
     validate_document(document_loader, workflowobj, uri)

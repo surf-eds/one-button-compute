@@ -61,35 +61,48 @@
     <div class="row">
         <h1>One Button Compute</h1>
         <p>
-        Paths in form are relative to <a href="{{ config['BEEHUB_ROOT'] }}">{{ config['BEEHUB_ROOT'] }}</a>, the input files and workflow file should be uploaded <a href="{{ config['BEEHUB_ROOT'] }}">there</a>.
+        Paths in form are relative to remote storage at <a href="{{ remote_storage_url }}">{{ remote_storage_url }}</a>, the input files and workflow file should be uploaded <a href="{{ remote_storage_url }}">there</a>.
         All files in the input directory will be processed by the workflow.
         </p>
     </div>
-    <div class="row">
-        <form ng-submit="$ctrl.submitJob()" method="post">
+    <form ng-submit="$ctrl.submitJob()" method="post">
+        <div class="row">
             <fieldset class="form-group col-md-4">
                 <legend>Input</legend>
                 <label for="inputdir">Directory</label>
                 <input type="text" class="form-control" id="inputdir" ng-model="$ctrl.query.inputdir"
-                       placeholder="Directory path on Beehub">
+                       placeholder="Directory path on remote storage">
             </fieldset>
             <fieldset class="form-group col-md-4">
                 <legend>Compute</legend>
                 <label for="cwl_workflow">CWL workflow file</label>
                 <input type="text" class="form-control" id="cwl_workflow" ng-model="$ctrl.query.cwl_workflow"
-                       placeholder="File path on Beehub">
+                       placeholder="File path on remote storage">
+                <div class="help-block">
+                    <a href="http://www.commonwl.org/">CWL Workflow</a> must have following input parameters:
+                    <ul>
+                        <li>input, Input file</li>
+                        <li>output, Output file name</li>
+                    </ul>
+                    The workflow must have the following output parameters:
+                    <ul>
+                        <li>outputfile, Output file</li>
+                    </ul>
+                </div>
             </fieldset>
             <fieldset class="form-group col-md-4">
                 <legend>Output</legend>
                 <label for="outputdir">Directory</label>
                 <input type="text" class="form-control" id="outputdir" ng-model="$ctrl.query.outputdir"
-                       placeholder="Directory path on Beehub">
+                       placeholder="Directory path on remote storage">
                 <label for="outputextension">Extension</label>
                 <input type="text" class="form-control" id="outputextension" ng-model="$ctrl.query.outputextension">
             </fieldset>
+        </div>
+        <div class="row">
             <button type="submit" class="btn btn-primary btn-lg">Submit</button>
-        </form>
-    </div>
+        </div>
+    </form>
     <hr/>
     <div class="row">
         <p ng-hide="$ctrl.job.state == 'UNKNOWN'">
