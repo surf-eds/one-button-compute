@@ -47,11 +47,13 @@
             };
 
             this.errorSubmitJob = function(response) {
-                alert('Job submission failed');
+                this.job.state = 'FAILURE';
+                this.job.log = 'Job submission failed';
             };
             this.errorStatusJob = function() {
                 $interval.cancel(poller);
-                alert('Job status request failed');
+                this.job.state = 'FAILURE';
+                this.job.log = 'Job status request failed';
             };
         });
     </script>
@@ -108,15 +110,15 @@
         <p ng-hide="$ctrl.job.state == 'UNKNOWN'">
         <a class="btn btn-lg" ng-class="$ctrl.state_cls" role="button" href="{{ '{{ $ctrl.job_url }}' }}">{{ '{{ $ctrl.job.state }}' }}</a>
         </p>
+        <div ng-show="$ctrl.job.state == 'SUCCESS'">
+            <p>Output: <a href="{{ '{{ $ctrl.job.result.url }}' }}">{{ '{{ $ctrl.job.result.url }}' }}</a></p>
+            <p>Output-object from cwl-runner:</p>
+            <pre>{{ '{{ $ctrl.job.result.output_object | json : spacing }}' }}</pre>
+        </div>
         <div class="result" ng-show="$ctrl.job.state == 'SUCCESS' || $ctrl.job.state == 'FAILURE'">
-            <p ng-show="$ctrl.job.state == 'SUCCESS'">
-            Output: <a href="{{ '{{ $ctrl.job.result.url }}' }}">{{ '{{ $ctrl.job.result.url }}' }}</a>
-            </p>
             <p>Exit code: {{ '{{ $ctrl.job.result.exit_code }}' }}</p>
             <p>Log:</p>
             <pre>{{ '{{ $ctrl.job.result.log }}' }}</pre>
-            <p>Output-object from cwl-runner:</p>
-            <pre>{{ '{{ $ctrl.job.result.output_object | json : spacing }}' }}</pre>
         </div>
     </div>
 </div>

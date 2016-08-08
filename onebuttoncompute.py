@@ -140,8 +140,14 @@ def status_job(job_id):
     if job.successful():
         response['result'] = job.result
     elif job.failed():
-        # result is an exception
-        response['result'] = str(job.result)
+        # result is an exception, with str(exception) set, but other exception attributes are missing.
+        response['result'] = {'log': str(job.result)}
+    try:
+        if response['result']['exit_code'] != 0:
+            response['state'] = 'FAILURE'
+    except (TypeError, KeyError) as ex:
+        pass
+
     return jsonify(response)
 
 
@@ -213,12 +219,15 @@ def perform_computation(self, remote_workflow_file, remote_input_dir, remote_out
 
     logging.warning(result)
 
-    self.update_state(state='POSTSTAGING')
-    upload_output_files(remote_storage, local_output_dir, output_files, remote_output_dir)
+    if result['exit_code'] == 0:
+        self.update_state(state='POSTSTAGING')
+        upload_output_files(remote_storage, local_output_dir, output_files, remote_output_dir)
+        result_url = remote_storage.url()
+        result['url'] = result_url
+
+    self.update_state(state='FINISHING')
     shutil.rmtree(session_dir)
 
-    result_url = remote_url(app.config, remote_output_dir)
-    result['url'] = result_url
     return result
 
 
@@ -265,7 +274,6 @@ def fetch_workflow(remote_storage, local_input_dir, remote_workflow_file, workfl
 
 
 def run_cwl(workflow_file, job_order_file, session_dir, output_dir):
-
     logging.warning('Running cwl')
 
     args = 'cwl-runner --quiet --outdir {0} {1} {2}'.format(output_dir, workflow_file, job_order_file)
