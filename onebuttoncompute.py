@@ -4,7 +4,7 @@ import re
 import subprocess
 import shutil
 import tempfile
-from urlparse import urlparse
+from urlparse import urlparse, urldefrag
 
 from celery import Celery
 from cwltool.load_tool import fetch_document, validate_document
@@ -166,8 +166,11 @@ def write_job_order(session_dir, input_dir, input_files, output_files, job_order
     return job_order_fn
 
 
-def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='workflow.wrapper.cwl'):
+def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='workflow.wrapper.cwl', fragment=''):
     abs_workflow_wrapper_fn = session_dir + '/' + workflow_wrapper_fn
+    workflow_file_frag = workflow_file
+    if fragment is not '':
+        workflow_file_frag = workflow_file + '#' + fragment
     wrapper = {
         'class': 'Workflow',
         'cwlVersion': 'v1.0',
@@ -181,7 +184,10 @@ def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='work
                 'type': 'File[]'
             }
         },
-        'requirements': [{'class': 'ScatterFeatureRequirement'}],
+        'requirements': [
+            {'class': 'ScatterFeatureRequirement'},
+            {'class': 'SubworkflowFeatureRequirement'},
+        ],
         'steps': {
             'step1': {
                 'in': {
@@ -189,7 +195,7 @@ def write_workflow_wrapper(session_dir, workflow_file, workflow_wrapper_fn='work
                     'output': 'output_filenames'
                 },
                 'out': ['outputfile'],
-                'run': workflow_file,
+                'run': workflow_file_frag,
                 'scatter': ['input', 'output'],
                 'scatterMethod': 'dotproduct'
             }
@@ -208,11 +214,13 @@ def perform_computation(self, remote_workflow_file, remote_input_dir, remote_out
     input_dir = 'in'
     output_dir = 'out'
     local_input_dir, local_output_dir, session_dir = create_session_dir(input_dir, output_dir)
+    logging.warning(session_dir)
+    remote_workflow_file, fragment = urldefrag(remote_workflow_file)
     workflow_file = fetch_workflow(remote_storage, session_dir, remote_workflow_file)
     input_files = fetch_input_files(remote_storage, local_input_dir, remote_input_dir)
     output_files = ['{0}{1}'.format(d, output_extension) for d in input_files]
     job_order_file = write_job_order(session_dir, input_dir, input_files, output_files)
-    workflow_wrapper_file = write_workflow_wrapper(session_dir, workflow_file)
+    workflow_wrapper_file = write_workflow_wrapper(session_dir, workflow_file, fragment=fragment)
 
     self.update_state(state='RUNNING')
     result = run_cwl(workflow_wrapper_file, job_order_file, session_dir, output_dir)

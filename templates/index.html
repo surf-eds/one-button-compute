@@ -81,7 +81,7 @@
                 <input type="text" class="form-control" id="cwl_workflow" ng-model="$ctrl.query.cwl_workflow"
                        placeholder="File path on remote storage">
                 <div class="help-block">
-                    <a href="http://www.commonwl.org/">CWL Workflow</a> must have following input parameters:
+                    <a href="http://www.commonwl.org/">CWL Workflow</a> file must have following input parameters:
                     <ul>
                         <li>input, Input file</li>
                         <li>output, Output file name</li>
@@ -90,6 +90,12 @@
                     <ul>
                         <li>outputfile, Output file</li>
                     </ul>
+                    <p class="pack">
+                        When workflow consists of multiple files then they must be combined into a single file.
+                        Combining can be done the command <code>cwltool --pack workflow.cwl > workflow.packed.cwl</code>.
+                        Submitting of a packed workflow needs <code>#main</code> appended to the path in the form.
+                        The workflow filename on the remote storage must be without #main.
+                    </p>
                 </div>
             </fieldset>
             <fieldset class="form-group col-md-4">
