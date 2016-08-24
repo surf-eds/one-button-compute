@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/surf-eds/one-button-compute.svg?branch=master)](https://travis-ci.org/surf-eds/one-button-compute)
 
 Web site runs a workflow.
- 
+
 # Feature/Limitations
 
 * Workflow is a single file in [Common Workflow format](http://www.commonwl.org/)
@@ -37,7 +37,7 @@ Use Docker to start a redis server
 docker run -d -p 6379:6379 redis
 ```
 
-Note!: When Celery workers are going to be run on different machines make sure they can connect to the redis server. 
+Note!: When Celery workers are going to be run on different machines make sure they can connect to the redis server.
 
 ## 2. Install dependencies
 
@@ -64,6 +64,12 @@ docker logs obc-minio
 ```
 
 The log output contains the credentials, urls and access instructions.
+
+To use known credentials from settings.cfg start it with
+```
+docker run -d --name obc-minio -p 9000:9000 -v $PWD/minio:/root -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" \
+  -e "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" minio/minio /root/export
+```
 
 Use `mc` (https://docs.minio.io/docs/minio-client-quickstart-guide) as CLI client.
 
@@ -117,7 +123,7 @@ python onebuttoncompute.py
 
 # Usage
 
-Add a CWL workflow and input files to remote storage. 
+Add a CWL workflow and input files to remote storage.
 See `example/` sub-directory for an example workflow.
 
 Go to http://localhost:5000/ (or http://&lt;server-name&gt;/ when reverse proxy is setup) to submit a computation.

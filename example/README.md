@@ -74,3 +74,8 @@ In the One Button Compute web interface fill form with
 * Input directory = run1/input
 * CWL workflow file = run1/cwa.tool.cwl
 * Output directory = run1/output
+
+The output can be cleared with
+```
+mc rm -r --force myminio/mybucket/obc/run1/output
+```
