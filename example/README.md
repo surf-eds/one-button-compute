@@ -79,3 +79,38 @@ The output can be cleared with
 ```
 mc rm -r --force myminio/mybucket/obc/run1/output
 ```
+
+### Use Swift storage
+
+To run a cwl from Openstack Swift storage.
+
+```
+# Create a container for input
+swift post -w $OS_USERNAME -r $OS_USERNAME eds
+# Upload input file
+swift upload --object-name pointcloud2images/input/rock-section.zip eds rock-section.zip
+# Upload cwl
+swift upload --object-name pointcloud2images/images2pointcloud.workflow.packed.cwl eds images2pointcloud.workflow.packed.cwl
+```
+
+In the One Button Compute web interface fill form with
+
+* Input directory = pointcloud2images/input
+* CWL workflow file = pointcloud2images/images2pointcloud.workflow.packed.cwl
+* Output directory = pointcloud2images/output
+
+The output can be cleared with
+```
+swift delete -p pointcloud2images/output eds
+```
+
+Use s3curl with s3sara alias in ~/.s3curl
+```
+# List bucket
+s3curl.pl --id s3sara -- https://s3.swift.surfsara.nl/eds |xml_pp
+# Download
+s3curl.pl --id s3sara -- https://s3.swift.surfsara.nl/eds/pointcloud2images/input/rock-section.zip > rock-section.zip
+# Upload
+s3curl.pl --id s3sara --put=rr.zip -- https://s3.swift.surfsara.nl/eds/pointcloud2images/input/rr.zip
+s3curl.pl --id s3sara --delete -- https://s3.swift.surfsara.nl/eds/pointcloud2images/input/rr.zip
+```

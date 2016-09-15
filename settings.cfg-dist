@@ -2,7 +2,7 @@
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-# remote storage type can be WEBDAV or S3
+# remote storage type can be WEBDAV or S3 or SWIFT
 # type WEBDAV needs the WEBDAV_* keys to be configured
 # type S3 needs the S3_ keys to be configured
 REMOTE_STORAGE_TYPE = 'WEBDAV'
@@ -18,3 +18,7 @@ WEBDAV_PASSWORD = '<FILLMEIN>'
 S3_ROOT = '<FILLMEIN>'
 S3_ACCESS_KEY = '<FILLMEIN>'
 S3_SECRET_KEY = '<FILLMEIN>'
+
+# Swift remote store type requires environment variables (OS_*) for the authentication and configuration.
+SWIFT_CONTAINER = '<FILLMEIN>'
+SWIFT_PREFIX = '<FILLMEIN>'

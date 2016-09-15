@@ -12,18 +12,18 @@ Web site runs a workflow.
 * The workflow, the directory with input files is downloaded from a remote storage server
 * The directory with output files is uploaded to a remote storage server
 
-The remote storage server can be WebDAV or S3.
+The remote storage server can be WebDAV or S3 or Swift.
 
 * The WebDAV server used for production is BeeHub (https://www.beehub.nl)
 * The WebDAV server used for local development can be the Docker container `nlesc/xenon-webdav` (https://hub.docker.com/r/nlesc/xenon-webdav/)
-* The S3 server used for production is a Openstack Swift (http://swift.openstack.org) instance
 * The S3 server used for local development is Minio (https://minio.io) instance, Minio is a single user S3 compliant server
+* The Swift server used for production is a Openstack Swift (http://swift.openstack.org) instance
 
 # Requirements
 
 * Python2
 * Docker
-* Read/write access to a remote storage server. Can be a WebDAV or S3 server.
+* Read/write access to a remote storage server. Can be a WebDAV or S3 or Swift server/account.
 
 # Install
 

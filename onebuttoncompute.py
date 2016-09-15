@@ -13,6 +13,7 @@ import easywebdav
 import magic
 import minio
 import ruamel.yaml as yaml
+from swiftclient.service import SwiftService, SwiftUploadObject
 
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
@@ -96,6 +97,34 @@ class S3Client(object):
         return self.root + '/' + path
 
 
+class SwiftClient(object):
+    """Client for Swift object/blob store of Openstack
+
+    See http://swift.openstack.org
+
+    Swift requires environment variables (OS_*) for the authentication and configuration"""
+
+    def __init__(self, container, prefix=''):
+        self.container = container
+        self.prefix = prefix
+        self.client = SwiftService()
+
+    def download(self, source, target):
+        raise NotImplemented()
+
+    def upload(self, source, target):
+        objects = [SwiftUploadObject(source, object_name=self.prefix + '/' + target)]
+        return self.client.upload(self.container, objects)
+
+    def ls(self, path):
+        fpath = self.prefix + '/' + path + '/'
+        listing = self.client.list(self.container, {'prefix': self.prefix})
+        return [d.name.replace(fpath, '') for d in listing.listing]
+
+    def url(self, path=''):
+        return self.root + '/' + path
+
+
 def remote_storage_client(config):
     if config['REMOTE_STORAGE_TYPE'] is 'WEBDAV':
         return WebDAVClient(config['WEBDAV_ROOT'],
@@ -107,6 +136,8 @@ def remote_storage_client(config):
                         config['S3_ACCESS_KEY'],
                         config['S3_SECRET_KEY'],
                         )
+    elif config['REMOTE_STORAGE_TYPE'] is 'SWIFT':
+        return SwiftClient()
 
 
 @app.route('/', methods=['GET'])
