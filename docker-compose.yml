@@ -1,0 +1,27 @@
+version: '2'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    links:
+      - redis
+  worker:
+    build: .
+    volumes:
+      # cwl-runner needs to perform docker run
+      - /var/run/docker.sock:/var/run/docker.sock
+    links:
+      - redis
+      - minio
+    command: celery worker -A onebuttoncompute.celery
+    # TODO worker expects shared volume with web container
+  redis:
+    image: redis
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: 'O597UKB7FBX60TXWS1NV'
+      MINIO_SECRET_KEY: '142SNLK5nlovupDs9+2Hm7cGR93hdmdo4Wu38/eq'

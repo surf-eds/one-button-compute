@@ -121,6 +121,27 @@ celery worker -A onebuttoncompute.celery &
 python onebuttoncompute.py
 ```
 
+# Run with docker compose
+
+Launches web app on http://localhost:5000 and a Minio file browser on http://localhost:9000
+
+Login to file browser with
+* access key: `O597UKB7FBX60TXWS1NV`
+* secret key: `142SNLK5nlovupDs9+2Hm7cGR93hdmdo4Wu38/eq`
+
+```
+docker-compose start
+# Configure local minio client
+mc config host add myminio http://localhost:9000 O597UKB7FBX60TXWS1NV '142SNLK5nlovupDs9+2Hm7cGR93hdmdo4Wu38/eq'
+# Create bucket
+mc mb myminio/mybucket
+# Upload input files and cwl file
+mc cp example/cwa.tool.cwl myminio/mybucket/obc/
+mc cp README.md myminio/mybucket/obc/input/
+```
+
+Expects Docker daemon is running on `/var/run/docker.sock`.
+
 # Usage
 
 Add a CWL workflow and input files to remote storage.
