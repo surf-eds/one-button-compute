@@ -90,7 +90,7 @@ Configure Nginx as reverse proxy for the flask app port 5000.
 
 ```
 location / {
-  proxy_pass http://localhost:5000
+  proxy_pass http://localhost:5000;
 }
 ```
 

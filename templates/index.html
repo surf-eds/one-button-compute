@@ -18,12 +18,12 @@
             this.job = {
                 state: 'UNKNOWN'
             };
-            this.state_cls = 'btn-default';
+            this.state_cls = 'label-default';
             this.job_url = '';
             var job_submission_url = "{{ url_for('submit_job') }}";
 
             this.submitJob = function() {
-                $ctrl.state_cls = 'btn-default';
+                $ctrl.state_cls = 'label-default';
                 $ctrl.job.state = 'SUBMITTING';
                 $http.post(job_submission_url, $ctrl.query).then(this.successSubmitJob.bind(this), this.errorSubmitJob.bind(this));
             };
@@ -38,10 +38,10 @@
             this.successStatusJob = function(response) {
                 this.job = response.data;
                 if (this.job.state === 'SUCCESS') {
-                    $ctrl.state_cls = 'btn-success';
+                    $ctrl.state_cls = 'label-success';
                     $interval.cancel(poller);
                 } else if (this.job.state === 'FAILURE') {
-                    $ctrl.state_cls = 'btn-danger';
+                    $ctrl.state_cls = 'label-danger';
                     $interval.cancel(poller);
                 }
             };
@@ -114,7 +114,8 @@
     <hr/>
     <div class="row">
         <p ng-hide="$ctrl.job.state == 'UNKNOWN'">
-        <a class="btn btn-lg" ng-class="$ctrl.state_cls" role="button" href="{{ '{{ $ctrl.job_url }}' }}">{{ '{{ $ctrl.job.state }}' }}</a>
+        <h2><span class="label" ng-class="$ctrl.state_cls">{{ '{{ $ctrl.job.state }}' }}</span></h2>
+        <a href="{{ '{{ $ctrl.job_url }}' }}">state</a>
         </p>
         <div ng-show="$ctrl.job.state == 'SUCCESS'">
             <p>Output: <a href="{{ '{{ $ctrl.job.result.url }}' }}">{{ '{{ $ctrl.job.result.url }}' }}</a></p>
