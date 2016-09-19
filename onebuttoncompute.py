@@ -25,6 +25,8 @@ app.config['CELERY_RESULT_SERIALIZER'] = 'json'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
+logger = logging.getLogger('onebuttoncompute')
+
 
 class WebDAVClient(object):
     def __init__(self, root, username, password):
@@ -110,19 +112,24 @@ class SwiftClient(object):
         self.client = SwiftService()
 
     def download(self, source, target):
-        raise NotImplemented()
+        objects = [self.prefix + '/' + source]
+        options = {'out_file': target}
+        return list(self.client.download(self.container, objects, options))
 
     def upload(self, source, target):
-        objects = [SwiftUploadObject(source, object_name=self.prefix + '/' + target)]
-        return self.client.upload(self.container, objects)
+        object_name = self.prefix + '/' + target
+        objects = [SwiftUploadObject(source, object_name=object_name)]
+        return list(self.client.upload(self.container, objects))
 
     def ls(self, path):
         fpath = self.prefix + '/' + path + '/'
-        listing = self.client.list(self.container, {'prefix': self.prefix})
-        return [d.name.replace(fpath, '') for d in listing.listing]
+        clisting = self.client.list(self.container, {'prefix': fpath})
+        listing = list(clisting)[0]['listing']
+        result = [d['name'].replace(fpath, '') for d in listing]
+        return result
 
     def url(self, path=''):
-        return self.root + '/' + path
+        return self.container + '/' + self.prefix + '/' + path
 
 
 def remote_storage_client(config):
@@ -137,7 +144,9 @@ def remote_storage_client(config):
                         config['S3_SECRET_KEY'],
                         )
     elif config['REMOTE_STORAGE_TYPE'] is 'SWIFT':
-        return SwiftClient()
+        return SwiftClient(config['SWIFT_CONTAINER'],
+                           config['SWIFT_PREFIX'],
+                           )
 
 
 @app.route('/', methods=['GET'])
