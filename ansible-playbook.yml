@@ -1,0 +1,79 @@
+- hosts: obc
+  tasks:
+    - apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+    - apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+    - apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+    - apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - docker-engine
+        - nginx-light
+        - git
+        - python-dev
+        - redis-server
+        - libffi-dev
+        - python-pip
+        - build-essential
+        - apache2-utils
+    - name: Allowed to Docker
+      user: name='{{ ansible_user }}' groups=docker append=yes
+    - service: name=docker state=restarted
+    - git: repo=https://github.com/surf-eds/one-button-compute.git dest=/opt/one-button-compute
+    - pip: name=pip state=latest
+    - pip: name=pycparser version=2.13
+    - pip: requirements=/opt/one-button-compute/requirements.txt
+    - name: Setup obc config file
+      copy: src=settings.cfg dest=/opt/one-button-compute/settings.cfg mode='go-r' owner='{{ ansible_user }}'
+    - name: Swift keystonerc config
+      copy: src=keystonerc dest=/opt/one-button-compute/keystonerc mode='go-r' owner='{{ ansible_user }}'
+    - pip: name=passlib
+    - htpasswd: path=/etc/nginx/passwdfile name='{{ obc_web_user }}' password='{{ obc_web_pw }}' mode='go-r'
+    - name: redis started
+      service: name=redis-server state=started
+    - name: Strong Diffie-Hellman Group
+      command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+      args:
+        creates: /etc/ssl/certs/dhparam.pem
+    - name: Nginx obc config
+      template: src=nginx.conf.j2 dest=/etc/nginx/sites-enabled/obc
+    - name: obc web service starter
+      blockinfile:
+        dest: /etc/init/onebuttoncompute-ws.conf
+        create: yes
+        block: |
+          description "One button compute web service"
+          start on filesystem or runlevel [2345]
+          stop on runlevel [!2345]
+          setuid {{ ansible_user }}
+          script
+            bash -c 'cd /opt/one-button-compute;. keystonerc;export HOME={{ ansible_env.HOME }};python onebuttoncompute.py'
+          end script
+    - name: obc web service worker
+      blockinfile:
+        dest: /etc/init/onebuttoncompute-worker.conf
+        create: yes
+        block: |
+          description "One button compute worker"
+          start on filesystem or runlevel [2345]
+          stop on runlevel [!2345]
+          setuid {{ ansible_user }}
+          script
+            bash -c 'cd /opt/one-button-compute;. keystonerc;export HOME={{ ansible_env.HOME }};celery worker -A onebuttoncompute.celery'
+          end script
+    - name: obc web service started
+      service: name=onebuttoncompute-ws state=restarted
+    - name: obc web worker started
+      service: name=onebuttoncompute-worker state=restarted
+    - ufw: rule=allow name={{item}} state=enabled
+      with_items:
+        - OpenSSH
+        - Nginx Full
+    - get_url: url=https://dl.eff.org/certbot-auto dest=/usr/sbin/certbot-auto mode=a+x
+    - name: Let's encrypt
+      command: /usr/sbin/certbot-auto certonly -n --webroot -w /usr/share/nginx/html/ -d {{ obc_domain }} --agree-tos --email {{ domain_email }}
+      args:
+        creates: /etc/letsencrypt/live/{{ obc_domain }}/privkey.pem
+    - name: NGINX started
+      service: name=nginx state=restarted

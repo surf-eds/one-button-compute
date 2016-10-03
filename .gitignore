@@ -42,5 +42,9 @@ coverage.xml
 # The config
 settings.cfg
 
+# Ansible config files
+keystonerc
+ansible.hosts
+
 # Minio persistence
 minio

@@ -127,3 +127,25 @@ Add a CWL workflow and input files to remote storage.
 See `example/` sub-directory for an example workflow.
 
 Go to http://localhost:5000/ (or http://&lt;server-name&gt;/ when reverse proxy is setup) to submit a computation.
+
+# Automatic deployment
+
+Use ansible playbook to setup server
+
+Create a host group called `obc`.
+Add a host to the group.
+Add the following vars:
+
+* obc_web_user
+* obc_web_pw
+* obc_domain
+* domain_email
+
+Create a local one-button-compute config file called `settings.cfg` (it will be copied to deployment machine)
+Create a local Openstack Swift config file called `keystonerc` (it will be sourced before deamons stats)
+
+Run playbook with something like:
+
+```
+ansible-playbook -v -i ansible.hosts -b -u ubuntu ansible-playbook.yml
+```
