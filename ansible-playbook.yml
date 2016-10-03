@@ -29,7 +29,7 @@
     - name: Swift keystonerc config
       copy: src=keystonerc dest=/opt/one-button-compute/keystonerc mode='go-r' owner='{{ ansible_user }}'
     - pip: name=passlib
-    - htpasswd: path=/etc/nginx/passwdfile name='{{ obc_web_user }}' password='{{ obc_web_pw }}' mode='go-r'
+    - htpasswd: path=/etc/nginx/passwdfile name='{{ obc_web_user }}' password='{{ obc_web_pw }}' mode='go-r' owner=www-data
     - name: redis started
       service: name=redis-server state=started
     - name: Strong Diffie-Hellman Group
