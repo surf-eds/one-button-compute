@@ -25,7 +25,7 @@ inputs:
     inputBinding:
       position: 2
 outputs:
-  files:
+  objects:
     type: string[]
     outputBinding:
       glob: output.txt
