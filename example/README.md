@@ -114,3 +114,34 @@ s3curl.pl --id s3sara -- https://s3.swift.surfsara.nl/eds/pointcloud2images/inpu
 s3curl.pl --id s3sara --put=rr.zip -- https://s3.swift.surfsara.nl/eds/pointcloud2images/input/rr.zip
 s3curl.pl --id s3sara --delete -- https://s3.swift.surfsara.nl/eds/pointcloud2images/input/rr.zip
 ```
+
+# Word count example which which interacts with S3 server directly
+
+Runs cwa.tool.cwl on each file in a directory on S3 and upload each output file to S3.
+
+See `cwa-files.workflow.s3.cwl`.
+
+In `../tools` folder there are CWL tools to interact with remote storage servers.
+
+Prepare S3 server with S3_ROOT of 'http://localhost:9000/mybucket/obc'
+```
+mc config host add myminio http://localhost:9000 *** ***
+mc mb myminio/mybucket
+mc cp cwa.tool.cwl myminio/mybucket/obc/run1/cwa.tool.cwl
+mc cp README.md myminio/mybucket/obc/run1/input/file1.txt
+mc cp cwa.tool.cwl myminio/mybucket/obc/run1/input/file2.txt
+```
+
+Run workflow with
+```
+cwl-runner cwa-files.workflow.s3.cwl \
+--input_dir myminio/mybucket/obc/run1/input \
+--output_dir myminio/mybucket/obc/run1/output \
+--output_extension .wc \
+--config-folder ~/.mc
+```
+
+The output files `file1.txt.wc` and `file2.txt.wc` are in the S3 server.
+```
+mc ls myminio/mybucket/obc/run1/output
+```
