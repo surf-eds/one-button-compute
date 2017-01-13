@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 label: mc ls
-doc: List buckets and objects with mc client
+doc: List buckets and objects on S3 compliant remote storage with mc client
 requirements:
 - class: InlineJavascriptRequirement
 baseCommand: mc

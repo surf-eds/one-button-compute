@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 label: mc cp <remote> <local>
-doc: Download file on remote storage to local file using mc client
+doc: Download file on S3 compliant remote storage to local file using mc client
 baseCommand: mc
 arguments:
 - cp

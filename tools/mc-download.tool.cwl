@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 label: mc cp <local> <remote>
-doc: Upload local file to remote storage using mc client
+doc: Upload local file to S3 compliant remote storage using mc client
 baseCommand: mc
 arguments:
 - cp
