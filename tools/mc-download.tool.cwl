@@ -12,12 +12,6 @@ inputs:
     inputBinding:
       prefix: --config-folder
       position: -1
-  recursive:
-    type: boolean
-    default: false
-    inputBinding:
-      prefix: --recursive
-      position: 1
   source:
     type: string
     inputBinding:

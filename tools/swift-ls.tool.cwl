@@ -21,7 +21,7 @@ requirements:
   dockerFile: |
     FROM python:3
     RUN pip install python-swiftclient python-keystoneclient
-    CMD ["ash"]
+    CMD ["swift"]
 baseCommand: swift
 arguments:
 - list
