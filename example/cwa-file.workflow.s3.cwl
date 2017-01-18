@@ -22,6 +22,8 @@ doc: |
 requirements:
   - class: SubworkflowFeatureRequirement
   - class: StepInputExpressionRequirement
+  - class: MultipleInputFeatureRequirement
+  - class: InlineJavascriptRequirement
 inputs:
   input_dir: string
   input_file: string
