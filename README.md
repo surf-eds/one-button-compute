@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/surf-eds/one-button-compute.svg?branch=master)](https://travis-ci.org/surf-eds/one-button-compute)
 
-Web site runs a workflow.
+Web site that runs a workflow.
 
 # Feature/Limitations
 
