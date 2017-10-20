@@ -1,8 +1,9 @@
 # One button compute
 
 [![Build Status](https://travis-ci.org/surf-eds/one-button-compute.svg?branch=master)](https://travis-ci.org/surf-eds/one-button-compute)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1033817.svg)](https://doi.org/10.5281/zenodo.1033817)
 
-Web site that runs a workflow.
+One button compute is aweb site that runs a workflow.
 
 # Feature/Limitations
 
